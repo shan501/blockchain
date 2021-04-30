@@ -86,22 +86,25 @@ class BlockChain {
         return this.chain[this.chain.length - 1]
     }
 
-    minePending(miningRewardAddress){
+		filterTransaction(){
+				for(let i=1;i<this.allTransaction;i++){
+						const block=this.allTransaction[i]
 
-        const rewardTx = new Transaction(null, miningRewardAddress, this.miningReward)
-        this.pendingTransaction.push(rewardTx)
-
-        const block = new Block(Date.now(), this.pendingTransaction, this.getLatestBlock().hash)
-        block.mineBlock(this.difficulty)
-
-        this.chain.push(block)
-        this.pendingTransaction = []
-        return('Block successfully mined!')
-    }
-
-		validateAll(){
-							
+						if(!block.validTransaction())
+										this.pendingTransaction.push(block)
 				}
+
+		}
+     
+		validTransaction(){
+				for (const trans of this.allTransaction){
+						if(this.getBalance(trans.fromPerson)<trans.amount){
+								 return("false")
+						}
+						return("true")
+			  }
+						
+		}				
     addTransaction(transaction){
 
         if(!transaction.fromPerson || !transaction.toPerson){

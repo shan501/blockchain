@@ -7,11 +7,14 @@ const myKey=ec.keyFromPrivate('04bb6901ef7ccd4626a83d6487c43f498e69a8d5e89d1e63e
 const myWallet= myKey.getPublic('hex')
 
 let shancoin= new BlockChain()
-const tx1=new Transaction(myWallet,'public key',"10")
+const tx1=new Transaction(myWallet,'public key',"0")
 tx1.signTransaction(myKey)
 shancoin.addTransaction(tx1)
-shancoin.getPendingTransaction()
-shancoin.minePending(myWallet)
+shancoin.validTransaction()
+console.log(shancoin.validTransaction())
+//shancoin.filterTransaction()
+//console.log(shancoin.pendingTransaction)
+//shancoin.minePending(myWallet)
 
 // console.log(shancoin.getBalance(myWallet))
 
@@ -44,5 +47,3 @@ shancoin.minePending(myWallet)
 
 
 
-    msg_str=msg.as_string()
-    msg_str=msg.as_string()
