@@ -4,14 +4,15 @@ const ec= new Ec('secp256k1')
 
 
 class Transaction{
-    constructor(fromPerson,toPerson,amount){
+    constructor(fromPerson,toPerson,amount,tip){
         this.fromPerson=fromPerson
         this.toPerson=toPerson
         this.amount=amount
+				this.tip=tip
     }
-
+		
     calculateHash(){
-        return SHA256(this.fromPerson+this.toPerson+this.amount).toString()
+        return SHA256(this.fromPerson+this.toPerson+this.amount+this.tip).toString()
     }
 
     signTransaction(signingKey){
@@ -42,10 +43,10 @@ class Transaction{
 class Block{
     constructor(timeStamp,transaction,previousHash=''){
         this.timeStamp=timeStamp
+				this.previousHash=previousHash
         this.transaction=transaction
-        this.previousHash=previousHash
-        this.hash=this.calculateHash()
-        this.nonce=0
+    		this.nonce=0
+				this.hash=this.calculateHash()
     }
 
     calculateHash(){
@@ -71,67 +72,82 @@ class Block{
 
 class BlockChain {
     constructor(){
-        this.chain=[this.createGensis()]
+        this.chain=[this.createGenesis()]
         this.difficulty=4
         this.pendingTransaction=[]
         this.miningReward=100
-				this.allTransaction=[]
-    }
+				this.badTransaction=[]
+		}
 
-    createGensis(){
-        return new Block("5/14/2021","No transaction","0")
-    }
+		createGenesis(genesisRewardAddress){
+				return new Block("Genesis Block","No Transaction",'0')
+		}
 
     getLatestBlock(){
         return this.chain[this.chain.length - 1]
     }
+				
+		minePending(miningRewardAddress){
+				const reward=new Transaction(null,miningRewardAddress,this.miningReward,this.getTips())
+				this.pendingTransaction.push(reward)
 
-    minePending(miningRewardAddress){
+				const block=new Block(Date.now(),this.pendingTransaction,this.getLatestBlock().hash)
+				block.mineBlock(this.difficulty)
 
-        const rewardTx = new Transaction(null, miningRewardAddress, this.miningReward)
-        this.pendingTransaction.push(rewardTx)
-
-        const block = new Block(Date.now(), this.pendingTransaction, this.getLatestBlock().hash)
-        block.mineBlock(this.difficulty)
-
-        this.chain.push(block)
-        this.pendingTransaction = []
-        return('Block successfully mined!')
-    }
-
-		validateAll(){
-							
-				}
+				this.chain.push(block)
+				this.pendingTransaction=[]
+				return("BlockMined")
+	
+		}
     addTransaction(transaction){
-
         if(!transaction.fromPerson || !transaction.toPerson){
             throw new Error('Transaction must include addresses')
-        }
-        
+        } 
         if(!transaction.isValid()){
             throw new Error('Cannot add invalid transaction')
         }
+				if(transaction.amount<=0){
+						throw new Error("Transaction should not be 0")
+				}
+				if(this.getBalance(transaction.fromPerson)<transaction.amount+transaction.tip){
+						this.badTransaction.push(transaction)
+				}else{
+				this.pendingTransaction.push(transaction) 
+				}
+		}
+		getTips(){
+					let tipReward=0
 
-
-        this.allTransaction.push(transaction)
-    }
+					for(const block of this.pendingTransaction){
+								if(block.tip > 0){
+										tipReward=tipReward + block.tip	
+								}
+					}
+						return tipReward
+		}
 
     getBalance(address){
         let balance=0
 
         for(const block of this.chain){
-            for(const transaction of block.transaction){
-                if (transaction.fromPerson === address){
-                    balance -= transaction.amount
+						for(const trans of block.transaction){
+                if (trans.fromPerson === address){
+                    balance -= trans.amount + trans.tip 							
                 }
-                if (transaction.toPerson=== address){
-                    balance += transaction.amount
+                if (trans.toPerson=== address){
+                    balance += trans.amount 
                 }
+								if (trans.fromPerson === null){
+										if(trans.toPerson=== address){
+												balance += trans.tip
+										}
+								}
+										
             }
-        }
+				} 
 					return balance
     }
-
+		
     verifyBlock(){
         for(let i = 1;i < this.chain.length;i++){
             const currentBlock=this.chain[i]
