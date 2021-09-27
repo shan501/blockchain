@@ -106,46 +106,45 @@ class BlockChain {
         if(!transaction.isValid()){
             throw new Error('Cannot add invalid transaction')
         }
-				if(transaction.amount<=0){
-						throw new Error("Transaction should not be 0")
-				}
-				if(this.getBalance(transaction.fromPerson)<transaction.amount+transaction.tip){
-						this.badTransaction.push(transaction)
-				}else{
-				this.pendingTransaction.push(transaction) 
-				}
+		if(transaction.amount<=0){
+				throw new Error("Transaction should not be 0")
 		}
-		getTips(){
-					let tipReward=0
+		if(this.getBalance(transaction.fromPerson)<transaction.amount+transaction.tip){
+			this.badTransaction.push(transaction)
+		}else{
+			this.pendingTransaction.push(transaction) 
+		}
+		}
+	getTips(){
+		let tipReward=0
 
-					for(const block of this.pendingTransaction){
-								if(block.tip > 0){
-										tipReward=tipReward + block.tip	
-								}
-					}
-						return tipReward
+		for(const block of this.pendingTransaction){
+			if(block.tip > 0){
+				tipReward=tipReward + block.tip	
+			}
 		}
+		return tipReward
+	}
 
     getBalance(address){
         let balance=0
 
         for(const block of this.chain){
-						for(const trans of block.transaction){
-                if (trans.fromPerson === address){
-                    balance -= trans.amount + trans.tip 							
-                }
-                if (trans.toPerson=== address){
-                    balance += trans.amount 
-                }
-								if (trans.fromPerson === null){
-										if(trans.toPerson=== address){
-												balance += trans.tip
-										}
-								}
-										
+		for(const trans of block.transaction){
+               		if (trans.fromPerson === address){
+                   	 balance -= trans.amount + trans.tip 							
+                	}
+                	if (trans.toPerson=== address){
+                    	balance += trans.amount 
+                	}
+			if (trans.fromPerson === null){
+				if(trans.toPerson=== address){
+					balance += trans.tip
+			}
+		}								
             }
-				} 
-					return balance
+	} 
+	return balance
     }
 		
     verifyBlock(){
